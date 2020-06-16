@@ -1,3 +1,7 @@
 <resources>
-    <string name="app_name">AwesomeProject</string>
+    <string name="app_name">LatticexForum</string>
+    <string name="new_topic">创建新主题</string>
+    <string name="input_title">输入标题</string>
+
+
 </resources>

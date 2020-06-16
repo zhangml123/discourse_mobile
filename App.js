@@ -1,3 +1,4 @@
+   
 /**
  * Sample React Native App
  * https://github.com/facebook/react-native
@@ -7,53 +8,50 @@
  */
 
 import React, { Component } from 'react';
-import { Text, View, Image, StyleSheet } from 'react-native';
+import {Button, Text, View, Image, StyleSheet, BackHandler, TouchableOpacity, Platform} from 'react-native';
 import { WebView } from 'react-native-webview';
+import Index from './components/index';
+import TopicList from './components/topicList';
+import Login from './components/login';
+import Post from './components/post';
+import TopicDetail from './components/topicDetail';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import moment from 'moment';
+import config from './config'
+moment.locale("zh-CN",{
+    relativeTime : config.relativeTime
+})
+const Stack = createStackNavigator();
+
 
 class App extends Component {
   constructor(props){
       super(props);
       this.state = {
           loading: true,
+         
       }
-  }
-  loaded(){
-    console.log("loaded")
-    this.setState({loading:false})
-  }
+  } 
+
+  
   render(){
-    const loading = this.state.loading;
-    const _this = this;
+    
     return (
       <>
-      
-       
-        
-        <WebView style={{"width":"100%","height":"100%"}} source={{ uri: 'https://www.platonfans.org' }} 
-          javascriptEnabled={true}
-          scrollEnabled={false}
-          scalesPageToFit={true}
-          automaticallyAdjustContentInsets={true}
-          onLoad={function(){
-            _this.loaded()
-          }}
-        />
-        {loading ?  
-         <View style={{flex: 1, alignItems: 'center', justifyContent: 'center' ,backgroundColor:'#fff'}}>
-            <Image style={styles.imageLocalStyle} source={require('./images/timg.gif')} />
-          </View> :
-           null}
+        <NavigationContainer >
+          <Stack.Navigator>
+            <Stack.Screen name="Index" component={Index} options={{ headerTitle: <></>,headerStyle: { height:0} }}  />
+            <Stack.Screen name="TopicList" component={TopicList} />
+            <Stack.Screen name="TopicDetail" component={TopicDetail} />
+            <Stack.Screen name="Login" component={Login} />
+            <Stack.Screen name="Post" component={Post}  />
+          </Stack.Navigator>
+        </NavigationContainer>
       </>
     );
   };
 };
 
-
-const styles = StyleSheet.create({
-  imageLocalStyle: {
-   
-    
-  },
-})
-
 export default App;
+
