@@ -77,26 +77,29 @@ class Dropdown extends Component {
 
 const styles = StyleSheet.create({
 	dropDownView:{
+
 		 height:windowHeight,
 		 width:windowWidth,
 		 padding:10,
 		 position:"absolute",
-		 top:50,zIndex:1
+		 top:55,zIndex:1
 	},
 	showDropdown:{
+		flex: 1,
 		height:windowHeight,
 		width:windowWidth,
 		padding:10,
 		position:"absolute",
-		top:50,
+		top:55,
 		zIndex:3
 	},
 	hideDropdown:{
+		flex: 1,
 		height:windowHeight,
 		width:windowWidth,
 		padding:10,
 		position:"absolute",
-		top:50,
+		top:55,
 		zIndex:1
 	},
 	dropDownBtn:{

@@ -26,8 +26,10 @@ export function getCategories(){
  * 获取最新主题
  */
 export function getTopics(params){
+
 	return new Promise(function(resolve, reject) {
 	   	let path = addr + params
+	   	console.log("path = "+ path)
 	    let xhr = new XMLHttpRequest();
 	    xhr.open('GET',path );
 	    xhr.onload = function() {
@@ -118,14 +120,71 @@ export function session(csrf, username, password){
 	    xhr.send();
 	});*/
 }
+
+/**
+ * 
+ *
+ */
+export function getSignupParams(){
+	return new Promise(function(resolve, reject) {
+	   	let path = addr + '/u/hp.json';
+	    let xhr = new XMLHttpRequest();
+	    xhr.open('GET',path );
+	   	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+ 		xhr.setRequestHeader("x-requested-with", 'XMLHttpRequest');
+	    xhr.onload = function() {
+	    	console.log(xhr.responseText)
+	      	//console.log(xhr)
+	        resolve(JSON.parse(xhr.responseText));
+	      
+	    };
+	    xhr.onerror = function() {
+	    	console.log("error")
+	      	reject(new Error(xhr.statusText));
+	    };
+	    xhr.send();
+
+	});
+}
+/**
+ * 注册账户
+ *
+ */
+export function signup(data, csrf){
+	return new Promise(function(resolve, reject) {
+	   	let path = addr + '/u';		
+	    let xhr = new XMLHttpRequest();
+	    xhr.open('POST',path );
+	   	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+	    xhr.setRequestHeader("x-csrf-token", csrf);
+	    xhr.setRequestHeader("x-requested-with", 'XMLHttpRequest')
+	    data.timezone = "Asia/Shanghai";
+	   	var params = Object.keys(data)
+	    .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(data[k]))
+	    .join('&');
+	    xhr.onload = function() {
+	    	console.log(xhr.responseText)
+	      	//console.log(xhr)
+	        resolve(JSON.parse(xhr.responseText));
+	      
+	    };
+	    xhr.onerror = function() {
+	    	console.log("error")
+	      	reject(new Error(xhr.statusText));
+	    };
+	    console.log(params)
+	    xhr.send(params);
+
+	});
+}
 /**
  *
  * 草稿
  */
 
-export function draft(){
+export function draft(draft_key){
 	return new Promise(function(resolve, reject) {
-	   	let path = addr + '/draft.json?draft_key=new_topic'
+	   	let path = addr + '/draft.json?draft_key=' + draft_key;
 	    let xhr = new XMLHttpRequest();
 	    xhr.open('GET',path );
 	   	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
@@ -143,7 +202,10 @@ export function draft(){
 
 	});
 }
-export function postTopic(title, raw, category, csrf){
+/**
+ * 发布帖子、回复
+ */
+export function postTopic(data, csrf){
 	return new Promise(function(resolve, reject) {
 	   	let path = addr + '/posts';
 	    let xhr = new XMLHttpRequest();
@@ -151,19 +213,15 @@ export function postTopic(title, raw, category, csrf){
 	    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
 	    xhr.setRequestHeader("x-csrf-token", csrf);
 	    xhr.setRequestHeader("x-requested-with", 'XMLHttpRequest');
-	    let data = {
-	    	raw: raw,
-			title: title,
-			unlist_topic: false,
-			category: category,
-			is_warning: false,
-			archetype: 'regular',
-			typing_duration_msecs: 1100,
-			composer_open_duration_msecs: 5745,
-			shared_draft: false,
-			draft_key: 'new_topic',
-			nested_post: true,
-	    }
+	    
+	    data.unlist_topic = false;
+	    data.is_warning = false;
+	    data.archetype = 'regular';
+	    data.typing_duration_msecs = 1700;
+	    data.composer_open_duration_msecs = 5745;
+	    data.shared_draft = false;
+	    data.nested_post = true;
+
 		var params = Object.keys(data)
 	    .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(data[k]))
 	    .join('&');
@@ -180,13 +238,142 @@ export function postTopic(title, raw, category, csrf){
 
 	});
 }
+
+/**
+ * 修改帖子
+ */
+export function postEdit(data, csrf){
+	return new Promise(function(resolve, reject) {
+	   	let path = addr + '/posts/'+data.post_id;
+	    let xhr = new XMLHttpRequest();
+	    xhr.open('PUT',path );
+	    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+	    xhr.setRequestHeader("x-csrf-token", csrf);
+	    xhr.setRequestHeader("x-requested-with", 'XMLHttpRequest');
+	    /*post[topic_id]: 83
+		post[raw]: reply test22222222222222222s's'd's'd'f2222222
+		post[raw_old]: reply test222222222222222222222222
+		post[edit_reason]: 
+		post[cooked]: <p>reply test22222222222222222s’s’d’s’d’f2222222</p>
+	   
+*/		
+
+		let data1 = {}
+		data1["post[topic_id]"]  = data.topic_id;
+		data1["post[raw]"]  = data.raw;
+		//data1["post[raw_old]"]  = data.raw_old;
+		//data1["post[cooked]"]  = data.cooked;
+		console.log("data1 = ")
+		console.log(data1)
+		var params = Object.keys(data1)
+	    .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(data1[k]))
+	    .join('&');
+	    console.log("params = ")
+			
+	    console.log(params)
+	    xhr.onload = function() {
+	    	console.log(xhr.responseText)
+	        resolve(JSON.parse(xhr.responseText));
+	    };
+	    xhr.onerror = function() {
+	    	console.log("error")
+	      reject(new Error(JSON.parse(xhr.statusText)));
+	    };
+	    xhr.send(params);
+
+	});
+}
+export function postDelete(context, post_id, csrf){
+	return new Promise(function(resolve, reject) {
+	   	let path = addr + '/posts/'+post_id;
+	   	let data = {
+	   		context:context
+	   	}
+	    let xhr = new XMLHttpRequest();
+	    xhr.open('DELETE',path );
+	   	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+	   	xhr.setRequestHeader("x-csrf-token", csrf);
+	   	xhr.setRequestHeader("x-requested-with", 'XMLHttpRequest');
+	   	var params = Object.keys(data)
+	    .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(data[k]))
+	    .join('&');
+	    console.log(params)
+	    xhr.onload = function() {
+	    	console.log(xhr.responseText)
+	      	//console.log(xhr)
+	        resolve(xhr.responseText);
+	      
+	    };
+	    xhr.onerror = function() {
+	    	console.log("error")
+	      	reject(new Error(xhr.statusText));
+	    };
+	    xhr.send(params);
+
+	});
+}
+export function postAction(data, csrf){
+	return new Promise(function(resolve, reject) {
+	   	let path = addr + '/post_actions';
+	   	/*id: 94
+		post_action_type_id: 2
+		flag_topic: false*/
+	    let xhr = new XMLHttpRequest();
+	    xhr.open('POST',path );
+	   	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+	   	xhr.setRequestHeader("x-csrf-token", csrf);
+	   	xhr.setRequestHeader("x-requested-with", 'XMLHttpRequest');
+	   	var params = Object.keys(data)
+	    .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(data[k]))
+	    .join('&');
+	    console.log(params)
+	    xhr.onload = function() {
+	    	console.log(xhr.responseText)
+	      	//console.log(xhr)
+	        resolve(xhr.responseText);
+	      
+	    };
+	    xhr.onerror = function() {
+	    	console.log("error")
+	      	reject(new Error(xhr.statusText));
+	    };
+	    xhr.send(params);
+
+	});
+}
+export function postActionUnlike(post_id, csrf){
+	return new Promise(function(resolve, reject) {
+	   	let path = addr + '/post_actions/' + post_id;
+	   	let data = {"post_action_type_id":2}
+	    let xhr = new XMLHttpRequest();
+	    xhr.open('DELETE',path );
+	   	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+	   	xhr.setRequestHeader("x-csrf-token", csrf);
+	   	xhr.setRequestHeader("x-requested-with", 'XMLHttpRequest');
+	   	var params = Object.keys(data)
+	    .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(data[k]))
+	    .join('&');
+	    console.log(params)
+	    xhr.onload = function() {
+	    	console.log(xhr.responseText)
+	      	//console.log(xhr)
+	        resolve(xhr.responseText);
+	      
+	    };
+	    xhr.onerror = function() {
+	    	console.log("error")
+	      	reject(new Error(xhr.statusText));
+	    };
+	    xhr.send(params);
+
+	});
+}
 export function uploadFile(type, uri, csrf){
 	return new Promise(function(resolve, reject) {
 		let client_id = md5.hex_md5( Date.now() +"client_id" );
 		let boundary = md5.hex_md5( Date.now() +"boundary" );
 		let body = [{
 	        name:'type', data:type,
-
 	    },{
 	    	name:'file',
         	filename: Date.now()+"_img",
@@ -222,6 +409,57 @@ export function uploadFile(type, uri, csrf){
 	            console.log(error);
 	             reject(new Error(JSON.parse(error)));
 	        });
+
+	});
+}
+
+export function getSummary(username, csrf){
+	return new Promise(function(resolve, reject) {
+	   	let path = addr + '/u/'+username+'/summary.json';
+	    let xhr = new XMLHttpRequest();
+	    xhr.open('GET',path );
+	   	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+	   	xhr.setRequestHeader("x-csrf-token", csrf);
+	   	xhr.setRequestHeader("x-requested-with", 'XMLHttpRequest');
+	   	
+	    xhr.onload = function() {
+	    	//console.log(xhr.responseText)
+	      	//console.log(xhr)
+	        resolve(JSON.parse(xhr.responseText));
+	      
+	    };
+	    xhr.onerror = function() {
+	    	console.log("error")
+	      	reject(new Error(xhr.statusText));
+	    };
+	    xhr.send();
+
+	});
+}
+
+export function search(data, csrf){
+	return new Promise(function(resolve, reject) {
+		var params = Object.keys(data)
+	    .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(data[k]))
+	    .join('&');
+	   	let path = addr + '/search.json?'+params;
+	   	console.log(path)
+	    let xhr = new XMLHttpRequest();
+	    xhr.open('GET',path );
+	   	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+	   	xhr.setRequestHeader("x-csrf-token", csrf);
+	   	xhr.setRequestHeader("x-requested-with", 'XMLHttpRequest');
+	    xhr.onload = function() {
+	    	//console.log(xhr.responseText)
+	      	//console.log(xhr)
+	        resolve(JSON.parse(xhr.responseText));
+	      
+	    };
+	    xhr.onerror = function() {
+	    	console.log("error")
+	      	reject(new Error(xhr.statusText));
+	    };
+	    xhr.send();
 
 	});
 }

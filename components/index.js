@@ -27,18 +27,13 @@ class Index extends Component {
            loading:true,
            showPost:false,
            isLogin:false,
-           avatarSource:""
+           avatarSource:"",
+           
       }
       
   	}
 	componentDidMount (){
-	
-
-	
-
-
-
-        this.GetInfo();
+	    this.GetInfo();
     }
     GetInfo = async () => {
         try{
@@ -49,7 +44,7 @@ class Index extends Component {
 			//console.log(category_list)
 			category_list.map((v,k)=>{
 				
-				categories.push({key:k+"a", id:v.id, cateTittle: v.name, description:v.description_text, time:"11111", topic_count:v.topic_count, cate:[{title:"",color:""},{title:"",color:""},{title:"",color:""}]	})
+				categories.push({key:k+"a", id:v.id, cateTittle: v.name, description:v.description_text, time:"", topic_count:v.topic_count, cate:[{title:"",color:""},{title:"",color:""},{title:"",color:""}]	})
 				//categories.push({key:k+"a",cateTittle: v.name,description:v.description_text,time:"11111",cate:[{title:"",color:""},{title:"",color:""},{title:"",color:""}]	})
 			})
            this.setState({
@@ -64,13 +59,8 @@ class Index extends Component {
     test = () =>{
    
     }
-    submitTopic = async ()=>{
-    	const csrf = this.state.csrf;
-    	await submitTopic("rbVB25VLUOiljLo+Jscru0gslypaVP+y9dmEknDlMUsLQ54QQxyknIQszYPqDDwyoouHXLLZ1JTXJUzj+BG5Kw==");
-    }
+   
     newTopic = async()=>{
-    	await draft();
-    	
     	this.setState({
     		showPost:true
     	})
@@ -90,6 +80,7 @@ class Index extends Component {
     	}
     }
 
+
 	render(){
 		const {categories, loading, c, showPost, isLogin} = this.state;
 		const navigation = this.props.navigation;
@@ -97,16 +88,13 @@ class Index extends Component {
 		return (
 			<>
 				<View style={{flex: 1, alignItems: 'center', justifyContent: 'flex-start',padding:2,backgroundColor:"#fff"}}>
-					{/*<Text  onPress={this.login}>login</Text>
-					<Text  onPress={this.submitTopic}>submitTopic</Text>
-					<Text  onPress={this.logout}>logout</Text>*/}
-			
-			       			<Image source={this.state.avatarSource} style={{}} />
-					<Header navigation = {navigation} refresh = {this.refresh}/> 
+					
+					<Image source={this.state.avatarSource} style={{}} />
+					<Header navigation = {navigation} refresh = {this.refresh} categories = {categories} showShadow = {this.showShadow}/> 
 					<Dropdown categories = {categories} currentCategory = {c} changeCategory = {(c,id) => navigation.navigate('TopicList',{ c:c, id:id, categories:categories})}/>
 					<View style={styles.viewCategory} >
 						<View style={{width:'100%',flexDirection:'row'}}>
-							<Text style ={styles.categoryBtn} onPress={() => navigation.navigate('TopicList',{type:"categories", categories:categories})}>分类</Text>
+							<Text style ={styles.currentCategoryBtn} onPress={() => navigation.navigate('TopicList',{type:"categories", categories:categories})}>分类</Text>
 							<Text style ={styles.categoryBtn} onPress={() => navigation.navigate('TopicList',{type:"latest", categories:categories})}>最新</Text>
 							<Text style ={styles.categoryBtn} onPress={() => navigation.navigate('TopicList',{type:"top", categories:categories})}>热门</Text>
 						</View>
@@ -121,9 +109,9 @@ class Index extends Component {
 		       			:null}
 					</View>
 					
-					{showPost ? <Post categories={categories} navigation={navigation} removePost={this.removePost}/> : null}
+					{showPost ? <Post args={{"categories":categories,"type":"new_topic"}} navigation={navigation} removePost={this.removePost}/> : null}
 
-					<View style={{width:"100%",backgroundColor:"#fff",marginTop:100,marginBottom:50,borderTopWidth:3,
+					<View style={{width:"100%",backgroundColor:"#fff",marginTop:150,borderTopWidth:3,
 		borderTopColor:'#eee',zIndex:2,justifyContent:"center"}}>
 						{loading ? 
 						<View style={{width:"100%",alignItems:"center",padding:20}} >
@@ -161,7 +149,10 @@ class Index extends Component {
 						
       				</View>
 	      		
+
+
 	      		</View>
+	      		
 			</>
 		);
 	};
@@ -171,7 +162,7 @@ const styles = StyleSheet.create({
 	viewCategory:{
 		width:"50%",
 		position:"absolute",
-		top:55,
+		top:60,
 		right:0,
 		zIndex:2,
 		
@@ -188,10 +179,28 @@ const styles = StyleSheet.create({
 	categoryBtn:{
 		width:40,
 		height:40,
-		backgroundColor:"#ff0000",
+		backgroundColor:"#888",
 		color:"#fff",
 		borderWidth: 1,
-		borderColor:'#ff0000',
+		borderColor:'#888',
+        borderTopLeftRadius: 40,
+        borderTopRightRadius: 40,
+        borderBottomRightRadius: 40,
+        borderBottomLeftRadius: 40,
+        textAlign:'center',
+        alignItems:'center',
+        justifyContent:'center',
+        textAlignVertical:'center',
+        marginLeft:10
+
+	},
+	currentCategoryBtn:{
+		width:40,
+		height:40,
+		backgroundColor:"#ff9944",
+		color:"#fff",
+		borderWidth: 1,
+		borderColor:'#ff9944',
         borderTopLeftRadius: 40,
         borderTopRightRadius: 40,
         borderBottomRightRadius: 40,

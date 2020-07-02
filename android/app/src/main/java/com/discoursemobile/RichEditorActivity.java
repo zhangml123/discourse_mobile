@@ -71,6 +71,7 @@ public class RichEditorActivity extends ReactActivity implements EasyPermissions
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.CAMERA,
     };
+    private String postType ;
     public static void postMessenger(JSONObject obj){
         try{
 
@@ -106,27 +107,15 @@ public class RichEditorActivity extends ReactActivity implements EasyPermissions
     {
         reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit(eventName,params);
     }
-    @SuppressLint("HandlerLeak")
+    @SuppressLint({"HandlerLeak", "SetTextI18n"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_editor);
         mReactContext = this.getReactNativeHost().getReactInstanceManager().getCurrentReactContext();
-
-        try{
-           //String str = "[{'cateTittle':'Uncateeed'},{'cateTitle':'cate1'},{'cateTitle':'cate2'},{'cateTitle':'cate3'}]";
-            //categories = new JSONArray(str);
-            categories = new JSONArray(getIntent().getStringExtra("categories"));
-
-
-        }catch(Exception e){
-        }
-        Bundle bundle= getIntent().getExtras();
+        spinner = (Spinner) findViewById(R.id.categories_spinner);
         statusLinear = (LinearLayout) findViewById(R.id.status_Linear);
         status = (TextView) findViewById(R.id.status);
-        spinner = (Spinner) findViewById(R.id.categories_spinner);
-        CategoriesAdapter adapter = new CategoriesAdapter(this,categories);
-        spinner.setAdapter(adapter);
         mProgress = (ProgressBar) findViewById(R.id.progress);
         mProgress.setVisibility(View.GONE);
         mTitleEdt = (EditText) findViewById(R.id.title_edt);
@@ -143,6 +132,57 @@ public class RichEditorActivity extends ReactActivity implements EasyPermissions
         //mEditor.setBackground("https://raw.githubusercontent.com/wasabeef/art/master/chip.jpg");
         mEditor.setPlaceholder("Insert text here...");
         //mEditor.setInputEnabled(false);
+        JSONObject args;
+        try{
+            args = new JSONObject(getIntent().getStringExtra("args"));
+            System.out.println("args122222222111111 = "+args);
+            System.out.println("args334343434"+args.getString("type"));
+            postType = args.getString("type");
+            if(postType.equals("new_topic")){
+                categories = args.getJSONArray("categories");
+                System.out.println("categories = "+categories);
+                CategoriesAdapter adapter = new CategoriesAdapter(this,categories);
+                spinner.setAdapter(adapter);
+                spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    @SuppressLint("WrongConstant")
+                    @Override
+                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                        try{
+                            String cateTittle = categories.getJSONObject(position).getString("id");
+                            System.out.println("onItemSelected1111 = "+title);
+                            currentCategoryId = cateTittle;
+                        }catch(JSONException e){
+
+                        }
+                    }
+                    @Override
+                    public void onNothingSelected(AdapterView<?> parent) {
+                        // Another interface callback
+                    }
+                });
+
+            }else if(postType.equals("reply")){
+                spinner.setVisibility(View.GONE);
+                findViewById(R.id.id2).setVisibility(View.GONE);
+                findViewById(R.id.id3).setVisibility(View.GONE);
+                TextView tv  = (TextView) findViewById(R.id.post_title);
+                tv.setText("回复  "+ args.getString("username"));
+                mSubmitBtn.setText("回复");
+                System.out.println("reply");
+            }else if(postType.equals("edit")){
+                spinner.setVisibility(View.GONE);
+                findViewById(R.id.id2).setVisibility(View.GONE);
+                findViewById(R.id.id3).setVisibility(View.GONE);
+                TextView tv  = (TextView) findViewById(R.id.post_title);
+                tv.setText("修改帖子  "+ args.getString("post_number"));
+                System.out.println(args.getString("raw"));
+                mEditor.setHtml(args.getString("raw"));
+                mSubmitBtn.setText("保存编辑");
+
+            }
+        }catch(Exception e){
+            System.out.println(e);
+        }
         handler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
@@ -193,24 +233,7 @@ public class RichEditorActivity extends ReactActivity implements EasyPermissions
 
             }
         };
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @SuppressLint("WrongConstant")
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                try{
-                    String cateTittle = categories.getJSONObject(position).getString("id");
-                    System.out.println("onItemSelected1111 = "+title);
-                    currentCategoryId = cateTittle;
 
-                }catch(JSONException e){
-
-                }
-            }
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                // Another interface callback
-            }
-        });
         mTitleEdt.addTextChangedListener(new TextWatcher(){
             @Override
             public void onTextChanged(CharSequence text, int start, int before, int count) {
@@ -468,11 +491,16 @@ public class RichEditorActivity extends ReactActivity implements EasyPermissions
     public void submit(String title, String content){
 
         statusLinear.setVisibility(View.GONE);
-        if(title == null || title.length() < 15){
-            status.setText("标题最少15个字符！");
-            status.setTextColor(Color.parseColor("#FF0000"));
-            statusLinear.setVisibility(View.VISIBLE);
-            return;
+        WritableMap params = Arguments.createMap();
+        if(postType.equals("new_topic") ){
+            if(title == null || title.length() < 15){
+                status.setText("标题最少15个字符！");
+                status.setTextColor(Color.parseColor("#FF0000"));
+                statusLinear.setVisibility(View.VISIBLE);
+                return;
+            }
+            params.putString("title", title);
+            params.putString("category", currentCategoryId);
         }
         if(content == null || content.length() < 20){
             status.setText("帖子最少20个字符！");
@@ -483,9 +511,6 @@ public class RichEditorActivity extends ReactActivity implements EasyPermissions
         mProgress.setVisibility(View.VISIBLE);
         mSubmitBtn.setEnabled(false);
         mSubmitBtn.setBackgroundColor(Color.parseColor("#cccccc"));
-        WritableMap params = Arguments.createMap();
-        params.putString("title", title);
-        params.putString("category", currentCategoryId);
         params.putString("content", content);
         sendEvent(mReactContext,"postSubmit",params);
     }

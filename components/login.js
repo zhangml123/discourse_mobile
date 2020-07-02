@@ -11,7 +11,8 @@
  		this.state = {
  			username:null,
  			password:null,
- 			errMsg:null
+ 			errMsg:null,
+
  		}
  	}
  	componentDidMount (){
@@ -19,7 +20,9 @@
  		navigation.setOptions({
 			title: "登录",
 			headerStyle: {
-	            height:45
+	            height:45,
+                
+
 	        }
 		});
     }
@@ -55,17 +58,26 @@
     }
  	render(){
  		const {errMsg} = this.state
+        const navigation = this.props.navigation;
 		return (
-			<>
-				<TextInput   placeholder = '用户名' onChangeText = {this.inputUName} ></TextInput>
-				<TextInput   placeholder = '密码'  secureTextEntry = {true} onChangeText = {this.inputPwd}></TextInput>
+			<View style={{flex:1,backgroundColor:"#fff"}}>   
+                <View style={{marginLeft:20,marginRight:20,marginTop:20}}>
+                    <Text style={{height:50, justifyContent:'center',  textAlignVertical:'center',fontSize:16}}>用户</Text>
+                    <TextInput   placeholder = '电子邮件或用户名' style={{borderWidth:1,borderColor:"#ccc",height:40}}  onChangeText = {this.inputUName}></TextInput>
+                 </View>
+                 <View style={{marginLeft:20,marginRight:20,marginTop:20}}>
+                    <Text style={{height:50, justifyContent:'center',  textAlignVertical:'center',fontSize:16}}>密码</Text>
+                    <TextInput   placeholder = '密码' secureTextEntry = {true} style={{borderWidth:1,borderColor:"#ccc",height:40}}  onChangeText = {this.inputPwd}></TextInput>
+                 </View>
 				{errMsg ? <Text>{errMsg}</Text> : null}
-				 <Button
-		          onPress={this.login}
-		          title="登录"
-		          color="#0000ff"
-       			/>
-			</>
+				
+                <View style={{marginLeft:20,marginRight:20,marginTop:20,flexDirection:'row',justifyContent:'space-between'}}>
+                    
+                    <Text onPress={this.login} style={{width:"35%", height:40,borderWidth:1,borderColor:"#00ff00",borderRadius:5,backgroundColor:"#00ff00",color:"#fff",fontSize:18,fontWeight:"bold", textAlign:'center', alignItems:'center', justifyContent:'center',  textAlignVertical:'center',fontSize:16}}>登录</Text>
+                    <Text onPress={() => navigation.navigate('Signup')} style={{width:"35%", height:40,borderWidth:1,borderColor:"#00ff00",borderRadius:5,backgroundColor:"#fff",color:"#00ff00",fontSize:18,fontWeight:"bold", textAlign:'center', alignItems:'center', justifyContent:'center',  textAlignVertical:'center',fontSize:16}}>创建新账户</Text>
+                </View>
+                
+			</View>
 		);
  	};
 

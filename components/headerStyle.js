@@ -7,11 +7,16 @@ const styles = StyleSheet.create({
         right:"5%",
         //backgroundColor:"#ccc" 
 	},
-	imageLeft:{
-		width:"8%",
+	menuImage:{
 		resizeMode:"contain",
 		position:"absolute",
-        left:"5%"  
+        left:"5%",
+	},
+	imageLeft:{
+		width:35,
+		height:35,
+		marginTop:6,
+		
 	},
 	imageRight:{
 		width:35,

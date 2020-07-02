@@ -15,6 +15,11 @@ import TopicList from './components/topicList';
 import Login from './components/login';
 import Post from './components/post';
 import TopicDetail from './components/topicDetail';
+import ProfileMenu from './components/profileMenu';
+import Profile from './components/profile';
+import Signup from './components/signup';
+import Active from './components/active';
+import Search from './components/search';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import moment from 'moment';
@@ -46,6 +51,10 @@ class App extends Component {
             <Stack.Screen name="TopicDetail" component={TopicDetail} />
             <Stack.Screen name="Login" component={Login} />
             <Stack.Screen name="Post" component={Post}  />
+            <Stack.Screen name="Profile" component={Profile}  />
+            <Stack.Screen name="Signup" component={Signup}  />
+            <Stack.Screen name="Active" component={Active}  />
+            <Stack.Screen name="Search" component={Search}  />
           </Stack.Navigator>
         </NavigationContainer>
       </>

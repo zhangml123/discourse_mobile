@@ -1,6 +1,6 @@
 module.exports = {
-  SERVER_URL: "https://www.platonfans.org",
-  //SERVER_URL: "https://forum.latticex.foundation/",
+  //SERVER_URL: "https://www.platonfans.org",
+  SERVER_URL: "https://forum.latticex.foundation/",
   relativeTime:{
         future : "%s后",
         past : "%s前",

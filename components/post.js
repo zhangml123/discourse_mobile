@@ -3,8 +3,8 @@
 */
 import React, { Component } from 'react';
 import {Button, Text, View, Image, StyleSheet, BackHandler, TouchableOpacity, Platform, TextInput, NativeModules, NativeEventEmitter} from 'react-native';
-import Editor from './editor' 
-import { session, getCsrf, postTopic, uploadFile } from "../request/discourse_api";
+
+import { session, getCsrf, postTopic, uploadFile, draft, postEdit } from "../request/discourse_api";
 import { _getUsers} from '../models/auth';
 import config from '../config'
 
@@ -16,12 +16,14 @@ class Post extends Component {
 	constructor(props){
 		super(props)
 		this.state={
-			csrf:null
+			csrf:null,
+			is_new_topic: this.props.args.type === "new_topic" ? true : false,
+			post_type: this.props.args.type
 		}
 	}
 	componentDidMount (){
 		const params = {"activity":"com.discoursemobile.RichEditorActivity",
-						"categories":this.props.categories
+						"args":this.props.args,
 		}
 		this.postSubmitListener = tempEventEmitterManager.addListener('postSubmit',(post)=>this.postSubmit(post));
 		this.uploadImgListener = tempEventEmitterManager.addListener('uploadImg',(uri)=>this.uploadImg(uri));
@@ -39,6 +41,13 @@ class Post extends Component {
 		
     }
     GetInfo = async ()=>{
+    	if(this.state.post_type === "new_topic"){
+			await draft("new_topic");
+    	}else{
+    		const draft_key = "topic_"+this.props.args.topic_id;
+			await draft(draft_key);
+    	}
+    	
 		const users = await _getUsers();
 		const csrf = JSON.parse(users)[0].csrf;
 		this.setState({csrf:csrf});
@@ -47,11 +56,51 @@ class Post extends Component {
     postSubmit = async(post) => {
     	console.log("postSubmit")
     	console.log(post)
-		const title = post.title
-		const raw = post.content 
-		const category = post.category 
-		const result = await postTopic(title, raw, category, this.state.csrf);
-		let type,msg;
+
+    	let params = {};
+    	let type,msg,result;
+
+    	if(this.state.post_type === "new_topic"){
+    		const title = post.title
+    		const category = post.category 
+    		params.title = post.title;
+    		params.category = post.category;
+    		params.draft_key = "new_topic";
+    		params.raw = post.content;
+			console.log("params = ")
+			console.log(params)
+			result = await postTopic(params, this.state.csrf);
+    	}else if(this.state.post_type === "reply"){
+    		let args = this.props.args;
+			params.topic_id = args.topic_id;
+			params.category = args.category_id;
+			params.whisper = false;
+			params.featured_link="";
+			params.draft_key="topic_"+args.topic_id;
+			params.reply_to_post_number= args.post_number;
+			params.raw = post.content;
+			console.log("params = ")
+			console.log(params)
+			result = await postTopic(params, this.state.csrf);
+    	}else if(this.state.post_type === "edit"){
+    		
+
+    		let args = this.props.args;
+			params.topic_id = args.topic_id;
+			params.post_id = args.post_id;
+			params.raw = post.content;
+			params.raw_old = args.raw;
+			params.cooked = post.content;
+			console.log("params11111111111111 = ")
+			console.log(params)
+			result = await postEdit(params, this.state.csrf);
+			if(!result.errors){
+				result.success = true;
+			}
+
+    	}
+		
+		
 		if(result.success) {
 			type = "post_success";
 			msg = "success"
@@ -68,7 +117,15 @@ class Post extends Component {
 		NativeModules.MapIntentModule.postMessenger(JSON.stringify(postMassage),(result)=>{
 			console.log(result)
 		}) 
-		if (result.success) this.props.navigation.navigate('TopicDetail',{tid:result.post.topic_id,uid:result.post.user_id})
+		if (result.success){
+			if(this.state.post_type === "new_topic"){
+				this.props.navigation.navigate('TopicDetail',{tid:result.post.topic_id,uid:result.post.user_id})
+			}else if(this.state.post_type === "reply"){
+				this.props.replySuccess();
+			}else if(this.state.post_type === "edit"){
+				this.props.editSuccess();
+			}
+		} 
     }
 	uploadImg = async (uri) => {
 		const uploadType = "composer"

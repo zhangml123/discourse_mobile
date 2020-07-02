@@ -42,7 +42,7 @@ public class MapIntentModule extends ReactContextBaseJavaModule{
             Class aimActivity = Class.forName( obj.getString("activity"));
             if(null!=currentActivity && !currentActivity.getClass().equals(aimActivity)){
                 Intent intent = new Intent(currentActivity,aimActivity);
-                intent.putExtra("categories", obj.getString("categories"));
+                intent.putExtra("args", obj.getString("args"));
                 currentActivity.startActivity(intent);
             }
 

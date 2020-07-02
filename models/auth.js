@@ -4,6 +4,7 @@ import  config from '../config'
 import { session, getCsrf } from "../request/discourse_api";
 var csrf = null;
 var _self = this;
+
 export function _isLogin(){
 	return CookieManager.get(config.SERVER_URL)
 	.then((res) => {
@@ -26,7 +27,7 @@ export async function _login(username, password){
 			});
 			return {"status":"success","data":data};
 		}else{
-			console.log("asdfasdfasdfasd")
+			
 			return {"status":"failed","data":data};
 		}
 		
@@ -35,10 +36,23 @@ export async function _login(username, password){
 	}
 }
 export function _logout(){
-	return CookieManager.clearAll()
-	  .then((res) => {
-	    //console.log('CookieManager.clearByName =>', res);
-	  });
+
+	return new Promise(function(resolve, reject) {
+		try{
+			CookieManager.clearAll()
+			.then((res) => {
+				console.log('CookieManager.clearByName =>', res);
+			});
+			NativeModules.DBManagerModule.deleteUser((rs)=>{
+				console.log(rs)
+				resolve(rs);
+			})
+		}catch(e){
+			reject(e);
+		}
+	   	
+
+	});
 }
 
 export function _getUsers(){

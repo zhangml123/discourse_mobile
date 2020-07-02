@@ -5,10 +5,11 @@ const windowHeight = dimensions.height;
 const styles = StyleSheet.create({
 	/*content*/
 	content:{
+		flex:1,
 		width:"100%",
 		backgroundColor:"#fff",
-		marginTop:70,
-		marginBottom:50,
+		marginTop:120,
+		marginBottom:5,
 		borderTopWidth:3,
 		borderTopColor:'#eee',
 		zIndex:2
@@ -38,10 +39,28 @@ const styles = StyleSheet.create({
 	categoryBtn:{
 		width:40,
 		height:40,
-		backgroundColor:"#ff0000",
+		backgroundColor:"#888",
 		color:"#fff",
 		borderWidth: 1,
-		borderColor:'#ff0000',
+		borderColor:'#888',
+        borderTopLeftRadius: 40,
+        borderTopRightRadius: 40,
+        borderBottomRightRadius: 40,
+        borderBottomLeftRadius: 40,
+        textAlign:'center',
+        alignItems:'center',
+        justifyContent:'center',
+        textAlignVertical:'center',
+        marginLeft:10
+
+	},
+	currentCategoryBtn:{
+		width:40,
+		height:40,
+		backgroundColor:"#ff9944",
+		color:"#fff",
+		borderWidth: 1,
+		borderColor:'#ff9944',
         borderTopLeftRadius: 40,
         borderTopRightRadius: 40,
         borderBottomRightRadius: 40,
