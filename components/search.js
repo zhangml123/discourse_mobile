@@ -30,7 +30,7 @@ class Search extends Component {
  		navigation.setOptions({
 			title: "搜索",
 			headerStyle: {
-	            height:45,
+	            height:40,
 	        }
 		});
 
@@ -156,12 +156,21 @@ class Search extends Component {
 
 					onEndReachedThreshold = {0.0001}
 					onEndReached={this.loadItems}
+					ListFooterComponent = {()=>{
+            		  	if(have_no_item){
+            		  		return <View style={{width:"100%",alignItems:"center"}} ><Text style={{height:40,fontSize:16,marginTop:10}}>没有找到更多结果。</Text></View>
+            		  
+            		  	}else{
+							return null
+            		  	}
+            		  } 
+            		}
 					/>	
 				}
 				{loading && <View style={{width:"100%",alignItems:"center"}} >
-					<Image  source={ loadingImage }/>
+					<Image style={{width:20,height:20}} source={ loadingImage }/>
 				</View>}
-				{have_no_item &&  <Text style={{height:40,fontSize:16,textAlign:"center"}}>没有找到更多结果。</Text>}	
+				
 			</View>
 		)
 	}

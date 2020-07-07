@@ -226,6 +226,7 @@ public class RichEditorActivity extends ReactActivity implements EasyPermissions
                         String img=" !["+ fileName +"|"+width+"x"+height+"]("+short_url+") ";
                         System.out.println("uploadimg img = " +img);
                         mEditor.setHtml(content + img);
+                        mEditor.clearFocusEditor();
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }

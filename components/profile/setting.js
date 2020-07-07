@@ -22,11 +22,10 @@ class Setting extends Component {
 	}
 	render(){
 		return(
-			<View>
-				<Button onPress={this.logout.bind(this)}
-		          title="注销账号"
-		          color="#aaa"/>
-
+			<View style={{width:"100%",textAlign:"center",alignItems:'center',  textAlignVertical:'center'}}>
+				
+		         <Text onPress={this.logout.bind(this)} style={{width:"70%", height:40,borderWidth:1,borderColor:"#555",borderRadius:5,backgroundColor:"#555",color:"#fff",fontSize:18,fontWeight:"bold", textAlign:'center', alignItems:'center', justifyContent:'center',  textAlignVertical:'center',fontSize:16}}>注销账号</Text>
+				
 			</View>
 		)
 	}

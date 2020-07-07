@@ -20,6 +20,9 @@ import Profile from './components/profile';
 import Signup from './components/signup';
 import Active from './components/active';
 import Search from './components/search';
+import Badges from './components/badges';
+import Users from './components/users';
+import About from './components/about';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import moment from 'moment';
@@ -55,6 +58,9 @@ class App extends Component {
             <Stack.Screen name="Signup" component={Signup}  />
             <Stack.Screen name="Active" component={Active}  />
             <Stack.Screen name="Search" component={Search}  />
+            <Stack.Screen name="Badges" component={Badges}  />
+            <Stack.Screen name="Users" component={Users}  />
+            <Stack.Screen name="About" component={About}  />
           </Stack.Navigator>
         </NavigationContainer>
       </>

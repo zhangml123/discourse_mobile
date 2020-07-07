@@ -196,24 +196,24 @@ class Signup extends Component {
 					 }
 				</View>
 				{errorMsg && <View style={{marginLeft:20,marginRight:20,marginTop:20,flexDirection:'row',justifyContent:'space-between'}}>
-					<Text style={{color:"#ff0000",fontSize:16}}>{errorMsg}</Text>	
+					<Text style={{color:"#1AAD19",fontSize:16}}>{errorMsg}</Text>	
 				</View>}
 				<View style={{marginLeft:20,marginRight:20,marginTop:20,flexDirection:'row',justifyContent:'space-between'}}>
 					
 					{enableSubmit ? 
-						<Text onPress={this.submit} style={{width:"35%", height:40,borderWidth:1,borderColor:"#00ff00",borderRadius:5,backgroundColor:"#00ff00",color:"#fff",fontSize:18,fontWeight:"bold", textAlign:'center', alignItems:'center', justifyContent:'center',  textAlignVertical:'center',fontSize:16}}>创建新账户</Text>
+						<Text onPress={this.submit} style={{width:"35%", height:40,borderWidth:1,borderColor:"#1AAD19",borderRadius:5,backgroundColor:"#1AAD19",color:"#fff",fontSize:18,fontWeight:"bold", textAlign:'center', alignItems:'center', justifyContent:'center',  textAlignVertical:'center',fontSize:16}}>创建新账户</Text>
 					:
 						<Text onPress={this.submit} style={{width:"35%", height:40,borderWidth:1,borderColor:"#ccc",borderRadius:5,backgroundColor:"#ccc",color:"#fff",fontSize:18,fontWeight:"bold", textAlign:'center', alignItems:'center', justifyContent:'center',  textAlignVertical:'center',fontSize:16}}>创建新账户</Text>
 					
 					}
-					<Text onPress={()=>this.props.navigation.goBack()} style={{width:"35%", height:40,borderWidth:1,borderColor:"#00ff00",borderRadius:5,backgroundColor:"#00ff00",color:"#fff",fontSize:18,fontWeight:"bold", textAlign:'center', alignItems:'center', justifyContent:'center',  textAlignVertical:'center',fontSize:16}}>登录</Text>
+					<Text onPress={()=>this.props.navigation.goBack()} style={{width:"35%", height:40,borderWidth:1,borderColor:"#1AAD19",borderRadius:5,backgroundColor:"#1AAD19",color:"#fff",fontSize:18,fontWeight:"bold", textAlign:'center', alignItems:'center', justifyContent:'center',  textAlignVertical:'center',fontSize:16}}>登录</Text>
 				</View>
 				
 				<View style={{margin:20,flexDirection:'row'}}>
 					<Text>注册即表示你同意</Text>
-					<Text style={{color:"#00ff00"}}> 隐私策略 </Text>
+					<Text style={{color:"#1AAD19"}}> 隐私策略 </Text>
 					<Text>和</Text>
-					<Text style={{color:"#00ff00"}}> 服务条款</Text>
+					<Text style={{color:"#1AAD19"}}> 服务条款</Text>
 				</View>
 				
 

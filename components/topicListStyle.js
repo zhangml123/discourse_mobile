@@ -4,8 +4,9 @@ const windowWidth = dimensions.width;
 const windowHeight = dimensions.height;
 const styles = StyleSheet.create({
 	topicTittle:{
-		width:"50%",
+		
 		padding:10,
+		paddingBottom:2,
 		paddingRight:0,
 		//backgroundColor:"#ccc"
 	}

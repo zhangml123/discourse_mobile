@@ -6,12 +6,12 @@ import {Button, Text, View, Image, StyleSheet, BackHandler, TouchableOpacity, Pl
 import Header from "./header";
 import Dropdown from "./dropdown";
 import Post from './post'
-import { getCategories, session, getCsrf, submitTopic, draft } from "../request/discourse_api";
+import { getCategories, session, getCsrf, submitTopic, draft, getCategory } from "../request/discourse_api";
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import loadingImage from '../images/loading.gif'
 import {WebView} from 'react-native-webview';
-
+import LinearGradient from 'react-native-linear-gradient'
 import md5 from "react-native-md5";
 const dimensions = Dimensions.get('window');
 const windowWidth = dimensions.width;
@@ -23,35 +23,133 @@ class Index extends Component {
       super(props);
       this.state = {
            categories:[],
+           categoriesAll:[],
            csrf:null,
            loading:true,
            showPost:false,
-           isLogin:false,
+           isLogin:null,
            avatarSource:"",
            
       }
       
   	}
 	componentDidMount (){
-	    this.GetInfo();
+	    //this.GetInfo();
     }
     GetInfo = async () => {
         try{
-        	
 			const data = await getCategories();
 			const category_list = data.category_list.categories;
 			let categories = [];
-			//console.log(category_list)
-			category_list.map((v,k)=>{
+			/*category_list.map((v,k)=>{
+				let subCates = []
+				if(v.subcategory_ids){
+					v.subcategory_ids.map(async(v1,k1)=>{
+						let cate = await getCategory(v1);					
+						subCates.push({id:v1,name:cate.category.name,color:cate.category.color});
+						if(v.subcategory_ids.length === subCates.length){
+							categories.push({
+								key:k+"a",
+								id:v.id,
+								cateTittle: v.name,
+								description:v.description_text,color:"#"+v.color, 
+								time:"", 
+								topic_count:v.topic_count, 
+								subCates:subCates	
+							})
+							if(category_list.length === categories.length){
+							 	this.setState({
+						           	categories:categories,
+						           	loading:false
+					           	})
+							}
+						}
+					})
+
+				}else{
+					categories.push({
+						key:k+"a",
+						id:v.id,
+						cateTittle: v.name,
+						description:v.description_text,color:"#"+v.color, 
+						time:"", 
+						topic_count:v.topic_count, 
+						subCates:null	
+					})
+					
+					if(category_list.length === categories.length){
+						this.setState({
+							categories:categories,
+							loading:false
+						})
+					}
+				}
 				
-				categories.push({key:k+"a", id:v.id, cateTittle: v.name, description:v.description_text, time:"", topic_count:v.topic_count, cate:[{title:"",color:""},{title:"",color:""},{title:"",color:""}]	})
-				//categories.push({key:k+"a",cateTittle: v.name,description:v.description_text,time:"11111",cate:[{title:"",color:""},{title:"",color:""},{title:"",color:""}]	})
+			})*/
+			let categoriesAll = [];
+			category_list.map((v,k)=>{
+				let obj = {
+					key:k+"a",
+					id:v.id,
+					cateTittle: v.name,
+					description:v.description_text,
+					color:"#"+v.color, 
+					time:"", 
+					topic_count:v.topic_count, 
+					subCates:null,
+					slug:v.slug
+				}
+				categories.push(obj)
+				categoriesAll.push({
+					type:0,	
+					id:v.id,
+					cateTittle:v.name,
+					topic_count:v.topic_count, 
+					color:"#"+v.color,	
+				})
+				if(v.subcategory_ids){
+					let subCates = []
+					v.subcategory_ids.map(async(v1,k1)=>{
+						let cate = await getCategory(v1);					
+						subCates.push({
+							id:v1,
+							name:cate.category.name,
+							color:"#"+cate.category.color,
+							topic_count:cate.category.topic_count,
+							slug:cate.category.slug
+						});
+						categoriesAll.push({
+							type:1,	
+							id:v1,
+							cateTittle:cate.category.name,
+							p_color:"#"+v.color,
+							color:"#"+cate.category.color,
+							topic_count:cate.category.topic_count, 
+						})
+						categories[k].subCates = subCates;
+						if( k1 == v.subcategory_ids.length - 1 ){
+							this.setState({
+					           	categories:categories,
+					           	categoriesAll:categoriesAll,
+					           	loading:false
+				           	})
+						}
+					 	
+					})
+				}
+
+				if(category_list.length === categories.length){
+					this.setState({
+						categories:categories,
+						categoriesAll:categoriesAll,
+						loading:false
+					})
+				}
+
+
 			})
-           this.setState({
-           	categories:categories,
-           	loading:false
-           })
-          
+			
+
         }catch(e){
             
         }
@@ -72,6 +170,7 @@ class Index extends Component {
     	})
    	}
     refresh= (rs) =>{
+    	console.log("index refresh")
     	this.GetInfo();
     	if(rs) {
     		this.setState({ isLogin:true})
@@ -79,10 +178,8 @@ class Index extends Component {
     		this.setState({	isLogin:false})
     	}
     }
-
-
 	render(){
-		const {categories, loading, c, showPost, isLogin} = this.state;
+		const {categories, categoriesAll, loading, c, showPost, isLogin} = this.state;
 		const navigation = this.props.navigation;
 	
 		return (
@@ -90,57 +187,70 @@ class Index extends Component {
 				<View style={{flex: 1, alignItems: 'center', justifyContent: 'flex-start',padding:2,backgroundColor:"#fff"}}>
 					
 					<Image source={this.state.avatarSource} style={{}} />
-					<Header navigation = {navigation} refresh = {this.refresh} categories = {categories} showShadow = {this.showShadow}/> 
-					<Dropdown categories = {categories} currentCategory = {c} changeCategory = {(c,id) => navigation.navigate('TopicList',{ c:c, id:id, categories:categories})}/>
+					<Header navigation = {navigation} refresh = {this.refresh} isLogin = {isLogin} option = {"index"} categoriesAll = {categoriesAll} showShadow = {this.showShadow}/> 
+					<Dropdown categories = {categories}  changeCategory = {(c,id) => navigation.navigate('TopicList',{ c:c, id:id, categories:categories,categoriesAll:categoriesAll})}/>
 					<View style={styles.viewCategory} >
 						<View style={{width:'100%',flexDirection:'row'}}>
-							<Text style ={styles.currentCategoryBtn} onPress={() => navigation.navigate('TopicList',{type:"categories", categories:categories})}>分类</Text>
-							<Text style ={styles.categoryBtn} onPress={() => navigation.navigate('TopicList',{type:"latest", categories:categories})}>最新</Text>
-							<Text style ={styles.categoryBtn} onPress={() => navigation.navigate('TopicList',{type:"top", categories:categories})}>热门</Text>
+							<Text style ={styles.currentCategoryBtn} onPress={() => navigation.navigate('TopicList',{type:"categories", categories:categories,categoriesAll:categoriesAll})}>分类</Text>
+							<Text style ={styles.categoryBtn} onPress={() => navigation.navigate('TopicList',{type:"latest", categories:categories,categoriesAll:categoriesAll})}>最新</Text>
+							<Text style ={styles.categoryBtn} onPress={() => navigation.navigate('TopicList',{type:"top", categories:categories,categoriesAll:categoriesAll})}>热门</Text>
 						</View>
 						{isLogin ? 
-						<View style={{width:'100%',flexDirection:'row',marginTop:10,paddingRight:20, justifyContent: 'flex-end'}}>
+						<View style={{width:'100%',flexDirection:'row',marginTop:15,paddingRight:20, justifyContent: 'flex-end'}}>
 							<Button
 					          onPress={this.newTopic}
-					          title="New Topic"
+					          title="创建新主题"
 					          color="#aaa"
 			       			/>
 		       			</View>	
 		       			:null}
 					</View>
 					
-					{showPost ? <Post args={{"categories":categories,"type":"new_topic"}} navigation={navigation} removePost={this.removePost}/> : null}
+
+
+					{showPost ? <Post args={{"categories":categoriesAll,"type":"new_topic"}} navigation={navigation} removePost={this.removePost}/> : null}
 
 					<View style={{width:"100%",backgroundColor:"#fff",marginTop:150,borderTopWidth:3,
 		borderTopColor:'#eee',zIndex:2,justifyContent:"center"}}>
 						{loading ? 
 						<View style={{width:"100%",alignItems:"center",padding:20}} >
-							<Image  source={ loadingImage }/>
+							<Image  style={{width:20,height:20}}   source={ loadingImage }/>
 						</View>
 						:null}
+						
 						<FlatList
 						  keyExtractor={(item, index) => index.toString()}
 						  data={categories}
 						  renderItem={
 						    ({item}) => 
-						    <View style={styles.itemView}>
+						    <View style={{width:"100%",
+								borderBottomWidth: 1,
+								borderLeftWidth:5,
+								borderBottomColor:'#ccc',
+								borderLeftColor:item.color,}}>
 						    	<View style={{flexDirection:'row',justifyContent:'space-between'}} >
-						    		<TouchableOpacity style={{width:"80%"}} onPress={() => navigation.navigate('TopicList',{ c:item.cateTittle, id:item.id, categories:categories})}>
+						    		<TouchableOpacity style={{width:"80%"}} onPress={() => navigation.navigate('TopicList',{ c:item.cateTittle, id:item.id, slug:item.slug, refresh:this.refresh, categories:categories,categoriesAll:categoriesAll})}>
 							    		<Text style={styles.cateTittle} numberOfLines={1}>{item.cateTittle}</Text>
 							    	</TouchableOpacity>
 							    	<Text style={styles.time}>{item.time}</Text>
 						    	</View>
 						    	<Text style={styles.description}>{item.description}</Text>
 						    	<View style={styles.cates}>
-						    		{item.cate.map((cate,k)=>{
-						    			if(cate.title != "" ){
+						    		{item.subCates && item.subCates.map((cate,k)=>{
+						    			if(cate.name != "" ){
 						    				return <View  key={k} style={styles.cate}>
-							    				<Text key={k} style={{width:10,height:10,margin:5,backgroundColor:cate.color}}>
-							    				</Text><Text key={k+"a"}  style={{}}>{cate.title}</Text>
+							    				<LinearGradient
+												    start={{ x : 0, y : 1 }} end={{ x : 1, y : 1 }}
+												    locations={[ 0,0.5,0.5, 1]}
+												    colors={[item.color, item.color, cate.color, cate.color ]}
+												    style={{width:10,height:10,margin:5}}>
+													    
+													</LinearGradient>
+							    				<Text key={k+"a"}  style={{}}>{cate.name}</Text>
 						    				</View>
 						    			}						    			
-						    		})}
-						    		
+						    		})
+						    		}
 						    	</View>
 						    </View>
 						    

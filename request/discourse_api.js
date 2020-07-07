@@ -22,6 +22,24 @@ export function getCategories(){
 	    xhr.send();
 	});
 }
+export function getCategory(cate_id){
+	return new Promise(function(resolve, reject) {
+	   	let path = addr + '/c/'+cate_id+'/show.json'
+	   	//console.log("path = " +path)
+	    let xhr = new XMLHttpRequest();
+	    xhr.open('GET',path );
+	    xhr.onload = function() {
+	      if (xhr.status === 200) {
+	        resolve(JSON.parse(xhr.responseText));
+	      } 
+	    };
+	    xhr.onerror = function() {
+	      reject(new Error(xhr.statusText));
+	    };
+	    xhr.send();
+	});
+}
+
 /**
  * 获取最新主题
  */
@@ -202,6 +220,30 @@ export function draft(draft_key){
 
 	});
 }
+export function getDraft(username, csrf){
+	return new Promise(function(resolve, reject) {
+	   	let path = addr + '/drafts.json?offset=0&username='+username;
+	    let xhr = new XMLHttpRequest();
+	    xhr.open('GET',path );
+	   	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+	   	xhr.setRequestHeader("x-csrf-token", csrf);
+	    xhr.setRequestHeader("x-requested-with", 'XMLHttpRequest');
+	    xhr.onload = function() {
+	    	console.log(xhr.responseText)
+	      	//console.log(xhr)
+	        resolve(JSON.parse(xhr.responseText));
+	      
+	    };
+	    xhr.onerror = function() {
+	    	console.log("error")
+	      	reject(new Error(xhr.statusText));
+	    };
+	    xhr.send();
+
+	});
+}
+
+
 /**
  * 发布帖子、回复
  */
@@ -312,6 +354,37 @@ export function postDelete(context, post_id, csrf){
 
 	});
 }
+
+export function topicDelete(context, topic_id, csrf){
+	return new Promise(function(resolve, reject) {
+	   	let path = addr + '/t/'+topic_id;
+	   	let data = {
+	   		context:context
+	   	}
+	    let xhr = new XMLHttpRequest();
+	    xhr.open('DELETE',path );
+	   	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+	   	xhr.setRequestHeader("x-csrf-token", csrf);
+	   	xhr.setRequestHeader("x-requested-with", 'XMLHttpRequest');
+	   	var params = Object.keys(data)
+	    .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(data[k]))
+	    .join('&');
+	    console.log(params)
+	    xhr.onload = function() {
+	    	console.log(xhr.responseText)
+	      	//console.log(xhr)
+	        resolve(xhr.responseText);
+	      
+	    };
+	    xhr.onerror = function() {
+	    	console.log("error")
+	      	reject(new Error(xhr.statusText));
+	    };
+	    xhr.send(params);
+
+	});
+}
+
 export function postAction(data, csrf){
 	return new Promise(function(resolve, reject) {
 	   	let path = addr + '/post_actions';
@@ -330,7 +403,7 @@ export function postAction(data, csrf){
 	    xhr.onload = function() {
 	    	console.log(xhr.responseText)
 	      	//console.log(xhr)
-	        resolve(xhr.responseText);
+	        resolve(JSON.parse(xhr.responseText));
 	      
 	    };
 	    xhr.onerror = function() {
@@ -357,7 +430,7 @@ export function postActionUnlike(post_id, csrf){
 	    xhr.onload = function() {
 	    	console.log(xhr.responseText)
 	      	//console.log(xhr)
-	        resolve(xhr.responseText);
+	        resolve(JSON.parse(xhr.responseText));
 	      
 	    };
 	    xhr.onerror = function() {
@@ -413,9 +486,57 @@ export function uploadFile(type, uri, csrf){
 	});
 }
 
+export function getUsers(username){
+	return new Promise(function(resolve, reject) {
+	   	let path = addr + '/u/'+username+'.json';
+	   	console.log("path = " + path)
+	    let xhr = new XMLHttpRequest();
+	    xhr.open('GET',path );
+	   	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+	   //	xhr.setRequestHeader("x-csrf-token", csrf);
+	   //	xhr.setRequestHeader("x-requested-with", 'XMLHttpRequest');
+	   	
+	    xhr.onload = function() {
+	    	//console.log(xhr.responseText)
+	      	//console.log(xhr)
+	        resolve(JSON.parse(xhr.responseText));
+	      
+	    };
+	    xhr.onerror = function() {
+	    	console.log("error")
+	      	reject(new Error(xhr.statusText));
+	    };
+	    xhr.send();
+
+	});
+}
+export function getUsersList(period, order, page, csrf){
+	return new Promise(function(resolve, reject) {
+	   	let path = addr + '/directory_items.json?page='+page+'&period='+period+'&order='+order;
+	   	console.log("path = " + path)
+	    let xhr = new XMLHttpRequest();
+	    xhr.open('GET',path );
+	   	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+	   	xhr.setRequestHeader("x-csrf-token", csrf);
+	   	xhr.setRequestHeader("x-requested-with", 'XMLHttpRequest');
+	   	
+	    xhr.onload = function() {
+	    
+	        resolve(JSON.parse(xhr.responseText));
+	      
+	    };
+	    xhr.onerror = function() {
+	    	console.log("error")
+	      	reject(new Error(xhr.statusText));
+	    };
+	    xhr.send();
+
+	});
+}
 export function getSummary(username, csrf){
 	return new Promise(function(resolve, reject) {
 	   	let path = addr + '/u/'+username+'/summary.json';
+	   	console.log("path = " + path)
 	    let xhr = new XMLHttpRequest();
 	    xhr.open('GET',path );
 	   	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
@@ -437,12 +558,107 @@ export function getSummary(username, csrf){
 	});
 }
 
+export function getUserAction(data, csrf){
+	return new Promise(function(resolve, reject) {
+		var params = Object.keys(data)
+	    .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(data[k]))
+	    .join('&');
+	   	let path = addr + '/user_actions.json?'+params;
+	    let xhr = new XMLHttpRequest();
+	    xhr.open('GET',path );
+	   	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+	   	xhr.setRequestHeader("x-csrf-token", csrf);
+	   	xhr.setRequestHeader("x-requested-with", 'XMLHttpRequest');
+	   	
+	    xhr.onload = function() {
+	    	//console.log(xhr.responseText)
+	      	//console.log(xhr)
+	        resolve(JSON.parse(xhr.responseText));
+	      
+	    };
+	    xhr.onerror = function() {
+	    	console.log("error")
+	      	reject(new Error(xhr.statusText));
+	    };
+	    xhr.send();
+
+	});
+}
+
+export function getBadges(username, csrf){
+	return new Promise(function(resolve, reject) {
+	   	let path = addr + '/user-badges/'+username+'.json?grouped=true'
+	    let xhr = new XMLHttpRequest();
+	    xhr.open('GET',path );
+	   	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+	   	xhr.setRequestHeader("x-csrf-token", csrf);
+	   	xhr.setRequestHeader("x-requested-with", 'XMLHttpRequest');
+	   	
+	    xhr.onload = function() {
+	    	//console.log(xhr.responseText)
+	      	//console.log(xhr)
+	        resolve(JSON.parse(xhr.responseText));
+	      
+	    };
+	    xhr.onerror = function() {
+	    	console.log("error")
+	      	reject(new Error(xhr.statusText));
+	    };
+	    xhr.send();
+
+	});
+}
+export function getAllBadges(){
+	return new Promise(function(resolve, reject) {
+	   	let path = addr + '/badges.json'
+	    let xhr = new XMLHttpRequest();
+	    xhr.open('GET',path );
+	   	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+	    xhr.onload = function() {
+	    	//console.log(xhr.responseText)
+	      	//console.log(xhr)
+	        resolve(JSON.parse(xhr.responseText));
+	      
+	    };
+	    xhr.onerror = function() {
+	    	console.log("error")
+	      	reject(new Error(xhr.statusText));
+	    };
+	    xhr.send();
+
+	});
+}
+
 export function search(data, csrf){
 	return new Promise(function(resolve, reject) {
 		var params = Object.keys(data)
 	    .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(data[k]))
 	    .join('&');
 	   	let path = addr + '/search.json?'+params;
+	   	console.log(path)
+	    let xhr = new XMLHttpRequest();
+	    xhr.open('GET',path );
+	   	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+	   	xhr.setRequestHeader("x-csrf-token", csrf);
+	   	xhr.setRequestHeader("x-requested-with", 'XMLHttpRequest');
+	    xhr.onload = function() {
+	    	//console.log(xhr.responseText)
+	      	//console.log(xhr)
+	        resolve(JSON.parse(xhr.responseText));
+	      
+	    };
+	    xhr.onerror = function() {
+	    	console.log("error")
+	      	reject(new Error(xhr.statusText));
+	    };
+	    xhr.send();
+
+	});
+}
+
+export function getAbout( csrf){
+	return new Promise(function(resolve, reject) {
+	   	let path = addr + '/about.json';
 	   	console.log(path)
 	    let xhr = new XMLHttpRequest();
 	    xhr.open('GET',path );

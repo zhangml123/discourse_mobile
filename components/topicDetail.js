@@ -6,14 +6,15 @@ import {Button, Text, View, Image, StyleSheet, BackHandler, TouchableOpacity, Pl
 import HTMLView from 'react-native-htmlview';
 import {WebView} from 'react-native-webview'
 import Toast from 'react-native-root-toast';
-import { getTopicDetail, postAction, postActionUnlike, postDelete } from "../request/discourse_api";
+import { getTopicDetail, postAction, postActionUnlike, postDelete, topicDelete } from "../request/discourse_api";
 import PostMenu from './postMenu';
 import loadingImage from '../images/loading.gif';
 import  config from '../config';
 import moment from 'moment';
 import Post from './post'
 import {_getUsers} from '../models/auth';
-
+import { SvgXml } from 'react-native-svg';
+import images from '../images/images';
 const dimensions = Dimensions.get('window');
 const windowWidth = dimensions.width;
 const windowHeight = dimensions.height;
@@ -39,7 +40,12 @@ class TopicDetail extends Component {
 			views:null,
 			selected:null,
 			refreshing:false,
-			initialScroll:0
+			initialScroll:0,
+			show_toast:false,
+			toastMsg:null,
+			show_bottom:false,
+    		bottomText:null
+
 		}
 	}
 	componentDidMount (){
@@ -47,12 +53,7 @@ class TopicDetail extends Component {
     }
 
     GetInfo = async () => {
-    	const currentUser = await _getUsers();
-		const csrf = JSON.parse(currentUser)[0] !=null ? JSON.parse(currentUser)[0].csrf :null;
-		this.setState({
-			currentUser:currentUser,
-			csrf:csrf
-		})
+    	await this.getCurrentUser();
        	const detail = await this.intiStream();
        	const stream = detail.post_stream.stream;
        	const post_id = this.props.route.params.post_id;
@@ -61,20 +62,28 @@ class TopicDetail extends Component {
        		const { per_page} = this.state;
 			let post_k = 0;
 			stream.map((v,k)=>{
-				if(post_id == v) post_k = k;
+				if(post_id == v) post_k = k + 1;
 			})
 			let page = Math.ceil(post_k / per_page);
+			loadingType = "search"
 		 	this.refreshPost(page, loadingType);
        	}else{
 			this.refreshPost(1,loadingType);
        	}
     }
-  
+  	getCurrentUser = async ()=>{
+  		const currentUser = await _getUsers();
+  		console.log(currentUser)
+		const csrf = JSON.parse(currentUser)[0] !=null && JSON.parse(currentUser)[0] != "undefind" ? JSON.parse(currentUser)[0].csrf :null;
+		this.setState({
+			currentUser:JSON.parse(currentUser)[0],
+			csrf:csrf
+		})
+  	}
     refreshPost = async ( page, loadingType)=>{
     	 try{
     	 	const tid = this.props.route.params.tid;
 			console.log("page = "+page)
-			console.log("aaaaaaaaa")
 			let path = "";
 			path += "/t/"+tid;
 			path += "/posts.json?";
@@ -97,12 +106,33 @@ class TopicDetail extends Component {
 				new_posts = detail.post_stream.posts;
 			}
 			
-			if(loadingType == "init") {
+			if(loadingType == "init" || loadingType == "search" || loadingType == "reply") {
 				this.setState({
 					page:page,
 					posts:new_posts,
 					loading:false
 				})
+				if(loadingType == "search"){
+					
+					const id = this.props.route.params.post_id
+					console.log("post_id = " +id)
+					new_posts.map((v,k)=>{
+						if(v.id== id){
+							console.log("k = "+k)
+							this.setState({initialScroll:k,selected:k})
+							setTimeout(()=>{
+					        	this.setState({selected:null})
+					        },1000)
+						}
+					})
+
+				}
+				if(loadingType == "reply"){
+					this.setState({initialScroll:new_posts.length -1, selected:new_posts.length -1})
+					setTimeout(()=>{
+			        	this.setState({selected:null})
+			        },1000)
+				}
 
 			}
 			if(loadingType == "up") {
@@ -126,17 +156,10 @@ class TopicDetail extends Component {
 			let pages = this.state.pages;
 			console.log("pages = " + pages)
 			console.log("page = "+page)
-			pages.push(page);
+			if(pages.indexOf(page) == -1 ) pages.push(page);
 			pages.sort((a,b)=>{return a-b});
 			this.setState({pages:pages})
 			console.log(this.state.pages)
-			let posts = this.state.posts;
-			const id = this.props.route.params.post_id
-			posts.map((v,k)=>{
-				if(v.id== id){
-					this.setState({initialScroll:k})
-				}
-			})
 			
         }catch(e){
         	console.log(e)
@@ -149,23 +172,37 @@ class TopicDetail extends Component {
 		path += ".json"
 		console.log(path)
 		const detail = await getTopicDetail(path);
-		console.log(detail)
-		const posts = detail.post_stream.posts;
 		const stream = detail.post_stream.stream;
 		const totalPage = Math.ceil(stream.length / this.state.per_page);
 		this.setState({
 			stream:stream,
 			detail:detail,
-			totalPage:totalPage
+			totalPage:totalPage,
+			pages:[]
 		})
 		
 		return detail;
     }
     loadItemsDown = () => {
-    	console.log("loaditems")
+    	console.log("loaditemsDown")
     	const {loading, page,  totalPage, pages} = this.state;
+    	console.log("loadItemsDown pages = ")
+    	console.log(pages)
     	console.log("pages.slice(-1) = "+pages.slice(-1) )
-    	if( loading == true ||  parseInt(pages.slice(-1))  == totalPage) return false;
+
+    	if( loading == true || pages.length == 0 ) {
+    		return false;	
+    	}
+
+    	if(parseInt(pages.slice(-1))  == totalPage){
+    		this.setState({
+    			show_bottom:true,
+    			bottomText:"没有更多帖子了"
+    		})
+
+    		return false;
+    	}
+
     	console.log("loadingdown")
     	this.setState({
     		loading:true
@@ -175,12 +212,18 @@ class TopicDetail extends Component {
         this.refreshPost(new_page,loadingType);
     }
     loadItemsUp = ()=>{
-    	console.log("loaditems")
+    	console.log("loadItemsUp")
 
     	const {refreshing, page, totalPage, pages } = this.state;
     	console.log("totalPage = "+ totalPage)
     	console.log("pages.slice(0,1) = "+pages.slice(0,1) )
-    	if( refreshing == true || parseInt(pages.slice(0,1)) == 1) return false;
+    	if( refreshing == true || pages.length == 0  ){
+    		return false;
+    	} 
+    	if(parseInt(pages.slice(0,1)) == 1){
+    		this.showToast("没有更多帖子了");
+    		return false;
+    	}
     	console.log("loadingup")
     	
     	this.setState({
@@ -230,23 +273,30 @@ class TopicDetail extends Component {
     		showReply:false
     	})
    	}
-   	reply =(replyParams)=>{
+   	reply = (replyParams)=>{
    		this.setState({
     		showReply:true,
     		replyParams:replyParams
     	})
    	}
-   	replySuccess= async ()=>{
+   	replySuccess=  (post)=>{
    		console.log("replySuccess")
-   		//const {page, per_page}=this.state
-        //this.GetInfo(page, per_page);
-
-   		this.refs.new_reply.measure((fx, fy, width, height, px, py) => {
-   			console.log("py = "+py)
-		        this.myScrollView.scrollTo({ x: px, y: py, animated: true });
-		    });
+   		console.log("post11111 = ")
+   		console.log(post)
+   		const stream = this.state.stream;
+   		stream.push(post.id)
+   		this.setState({stream:stream})
+   		const totalPage = Math.ceil(stream.length / this.state.per_page);
+   		console.log("reply success totalPage = "+ totalPage)
+   		this.setState({
+			stream:stream,
+			totalPage:totalPage,
+			pages:[]
+		})
+   		let loadingType = "reply"
+   		this.refreshPost(totalPage, loadingType);
    	}
-   	like = async (post_id)=>{
+   	like = async (post_id, post_key)=>{
    		let params = {};
    		params.id = post_id;
    		params.post_action_type_id = 2;
@@ -254,35 +304,56 @@ class TopicDetail extends Component {
    		
    		const result = await postAction(params,this.state.csrf); 
    		console.log(result)
-   		this.refresh();
+   		const posts =this.state.posts;
+   		posts[post_key] = result;
+   		this.setState({
+   			posts : posts
+   		})
+   		//this.refresh();
    	}
    	whoLiks=()=>{
    		console.log("wholikes")
    	
    	}
-   	unlike = async (post_id, can_unlike)=>{
+   	unlike = async (post_id, can_unlike, post_key)=>{
    		console.log("unlike")
 
    		if(can_unlike){
    			const result = await postActionUnlike(post_id,this.state.csrf); 
 	   		console.log(result)
-	   		this.refresh();
+	   		if(result.error) {
+	   			this.showToast("不可取消");
+	   			return;
+	   		}
+	   		if(result.id == post_id){
+	   			const posts =this.state.posts;
+		   		posts[post_key] = result;
+		   		this.setState({
+		   			posts : posts
+		   		})
+	   		}
+	   		//this.refresh();
    		}else{
    			console.log("不可取消")
-			let toast = Toast.show('不可取消', {
-				 duration: Toast.durations.LONG,
-				 position: Toast.positions.BOTTOM,
-				 shadow: false,
-				 animation: true,
-				 hideOnPress: true,
-				 delay: 0,
-			});
-			setTimeout(function () {
-			 Toast.hide(toast);
-			}, 1000);
+   			this.showToast("不可取消");
+			
    		}
    		
    	}
+   	showToast = (text)=>{
+		this.setState({
+			show_toast:true,
+			toastMsg:text
+		})
+		let _self = this
+		setTimeout(function () {
+			_self.setState({
+			show_toast:false,
+				toastMsg:null
+			})
+		}, 2000);
+   	}
+
    	removeEdit = ()=>{
    		console.log("removeEdit")
    		this.setState({
@@ -298,32 +369,44 @@ class TopicDetail extends Component {
     		editParams:editParams
     	})
    	}
-   	editSuccess= ()=>{
+   	editSuccess= (post)=>{
    		console.log("editSuccess")
-   		this.refresh();
-   		
+   		//this.refresh();
+
+   		const posts = this.state.posts;
+   		posts.map((v,k)=>{
+   			if(v.id == post.id){
+   				posts[k] = post
+   			}
+
+   		})
+		this.setState({posts:posts})   		
    	}
-   	delete = async (post_id, topic_id, topic_slug, post_number)=>{
+   	deletePost = async (post_id, topic_id, topic_slug, post_number)=>{
    		console.log("delete")
    		let context="/t/"+topic_slug+"/"+topic_id;
    		const rs = await postDelete(context, post_id, this.state.csrf)
-   		
-   		this.refs["post_number_"+post_number].setNativeProps({ style:{
-          backgroundColor:'rgba(242,171,154,0.7)'
-        }})
-        
-        setTimeout(()=>{
-        	this.refs["post_number_"+post_number].setNativeProps({ style:{
-	          backgroundColor:'#fff'
-	        }})
-			this.refresh();
-        },1000)
+   		const posts = this.state.posts;
+   		posts.map((v,k)=>{
+   			if(v.id == post_id){
+   				posts.splice(k,1);
+   			}
+   		})
+   		this.setState({posts:posts})
    	}
-   	refresh= ()=>{
-		this.GetInfo();
+   	deleteTopic = async(post_id, topic_id, topic_slug, post_number)=>{
+   		console.log("deleteTopic")
+   		let context="/t/"+topic_slug+"/"+topic_id;
+   		const rs = await topicDelete(context, topic_id, this.state.csrf)
+   		
+   		
+   	}
+   	refresh = async ()=>{
+   		console.log("refresh")
+		await this.getCurrentUser();
 	}
 	render(){
-		const {detail, posts, showReply, replyParams, editParams, currentUse, showEdit, currentUser, loading, selected} = this.state;
+		const {detail, posts, showReply, replyParams, editParams, currentUse, showEdit, currentUser, loading, selected, show_toast, toastMsg, show_bottom,bottomText} = this.state;
 		
 		const avatar_template = detail ? detail.details.created_by.avatar_template.replace("{size}",64):"";
 		
@@ -331,7 +414,8 @@ class TopicDetail extends Component {
 		navigation.setOptions({
 			title: detail ? detail.title :"",
 			headerStyle: {
-	            height:45
+				
+	            height:40
 	        }
 		})
 		return (
@@ -346,6 +430,7 @@ class TopicDetail extends Component {
 					  style={{flex:1,backgroundColor:"#fff",padding:5,paddingTop:0}}
 					  keyExtractor={(item, index) => index.toString()}
 					  data={posts}
+					  initialNumToRender = {this.state.per_page}
 					  initialScrollIndex = {this.state.initialScroll }
 					  renderItem={
 					    ({item,index}) => {
@@ -363,12 +448,14 @@ class TopicDetail extends Component {
 								})
 							let showLike = false;
 							let likeImageType = 1 ; //空心灰 
-							let like = this.like.bind(this,post.id);
+							let like = this.like.bind(this,post.id, k);
 							let showEdit = false;
 							let showDelete = false;
-							if(currentUser == null){
+							let del = this.deletePost.bind(this,post.id, post.topic_id, post.topic_slug, post.post_number)
+							if(currentUser == null || currentUser == "undefind"  ){
 								showLike = true;
 								like = () => navigation.navigate('Login',{refresh:this.refresh});
+								reply = ()=> navigation.navigate('Login',{refresh:this.refresh});
 							}else{
 								showLike = true;
 								if(post.yours && post.like_count == null){
@@ -378,18 +465,30 @@ class TopicDetail extends Component {
 									like = this.whoLiks;
 								}else if(!post.yours && post.liked){
 									likeImageType = 3; //实心红
-									like = this.unlike.bind(this,post.id,post.can_unlike);
+									like = this.unlike.bind(this,post.id,post.can_unlike, k);
 
 								}
-								if(post.can_edit){
+								if(post.can_edit ){
 									showEdit = true;
 								}
 								if(post.can_delete){
 									showDelete = true;
 								}
 								
-							}
 
+								/*if(post.username == currentUser.username && post.post_number == 1){
+									showDelete = true;
+									del = this.deleteTopic.bind(this,post.id, post.topic_id, post.topic_slug, post.post_number)
+								}*/
+
+								reply = this.reply.bind(this,{username:post.name,post_number:post.post_number})
+
+							}
+							let cooked = post.cooked;
+							cooked = cooked.replace(/<img/g,'\n<img');
+							cooked = cooked.replace(/<span class="filename">.*?<\/span>/g,"");
+							cooked = cooked.replace(/<span class="informations">.*?<\/span>/g,"");
+							//console.log("cooked = "+cooked)
 							return (
 								<View k={k} style=
 									{selected == k ? {width:"100%",backgroundColor:"#eee",paddingTop:10,borderTopWidth:1,borderColor:"#ccc",paddingBottom:20}
@@ -402,12 +501,14 @@ class TopicDetail extends Component {
 									</View>}
 									
 									<View style={{flexDirection:'row',paddingTop:10}} >
-										<Image style={{width:35,height:35,	borderRadius:35,marginTop:6}}  source={{uri: url + post.avatar_template.replace("{size}",64) }}/>
+
+										<TouchableOpacity style={{}} onPress={() =>navigation.navigate('Profile',{refresh:null,username:post.username})}>
+											<Image style={{width:35,height:35,	borderRadius:35,marginTop:6}}  source={{uri: url + post.avatar_template.replace("{size}",64) }}/>
+										</TouchableOpacity>
 										<Text style={{paddingLeft:10,fontWeight:'bold',color:"#777"}}>{ post.username}</Text>
 										{post.reply_to_post_number ? <View style={{position:"absolute",right:10,color:"#777",flexDirection:'row',marginTop:10}}>
 											<TouchableOpacity onPress={this.clickToScroll.bind(this, "post_number", post.reply_to_post_number)} style={{flexDirection:'row',marginRight:10}}>
-												<Image style={{width:25,height:25,	borderRadius:25}}  source={require("../images/reply2.png")}/>
-												
+												<SvgXml style={{marginTop:3,marginRight:3}}width="20" height="20" xml={images.reply2}/>
 											<Image style={{width:25,height:25,	borderRadius:25}}  source={{uri: url + post.reply_to_user.avatar_template.replace("{size}",64) }}/>
 											</TouchableOpacity>
 											<Text style={{  height:25,textAlign:'center',
@@ -420,11 +521,11 @@ class TopicDetail extends Component {
 									<View style={{paddingTop:10}}>
 									
 										<HTMLView style={{}}
-								        value={post.cooked+"\n"}
-							       //	renderNode={this.renderNode}
+									        value={cooked+"\n"}
+								       //	renderNode={this.renderNode}
 							      		/>
 							   		</View>
-							   		<PostMenu reply = {this.reply.bind(this,{username:post.name,post_number:post.post_number})}
+							   		<PostMenu reply =  {reply} 
 							   				  showLike = {showLike}
 							   				  showDelete = {showDelete} 
 							   				  showEdit = {showEdit}  
@@ -434,7 +535,7 @@ class TopicDetail extends Component {
 							   				  like_count = {post.like_count ? post.like_count: ""}
 							   				  can_unlike = {post.can_unlike ? post.can_unlike : false}
 							   				  edit = {this.edit.bind(this,{username:post.name,reply_to:post.reply_to_user ? post.reply_to_user.username : null,post_number:post.post_number,post_id:post.id,raw:post.cooked})} 
-							   				  delete = {this.delete.bind(this,post.id, post.topic_id, post.topic_slug, post.post_number)}
+							   				  delete = {del}
 							   		/>
 								</View>
 						)}
@@ -443,6 +544,14 @@ class TopicDetail extends Component {
 					  onEndReached={this.loadItemsDown}
 					  onRefresh={this.loadItemsUp.bind(this)}     
             		  refreshing={this.state.refreshing}
+            		  ListFooterComponent = {()=>{
+            		  	if(show_bottom){
+            		  		return <View style={{width:"100%",height:40,textAlign:"center",alignItems:'center' , textAlignVertical:'center'}}><Text style={{padding:10}}>{bottomText}</Text></View>
+            		  	}else{
+							return null
+            		  	}
+            		  } 
+            		}
 					/>	
 				}
 
@@ -465,10 +574,11 @@ class TopicDetail extends Component {
 										}} navigation={navigation} removePost={this.removeEdit} editSuccess={this.editSuccess}/> : null}
 				{loading ? 
 					<View style={{width:"100%",alignItems:"center"}} >
-						<Image  source={ loadingImage }/>
+						<Image style={{width:20,height:20}} source={ loadingImage }/>
 					</View>
 				:null}
-  			</View>
+				{show_toast && <View style={{width:"100%",height:40,textAlign:"center",alignItems:'center' , textAlignVertical:'center'}}><Text style={{padding:10,backgroundColor:"#666",color:"#fff"}}>{toastMsg}</Text></View>}
+			</View>
 			
 		)
 	}

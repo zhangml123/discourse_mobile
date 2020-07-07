@@ -25,7 +25,8 @@ const styles = StyleSheet.create({
 		position:"absolute",
 		top:55,
 		right:0,
-		zIndex:2
+		zIndex:2,
+		marginTop:5
 		
 	},
 	viewContent:{

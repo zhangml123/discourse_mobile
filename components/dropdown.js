@@ -16,8 +16,6 @@ class Dropdown extends Component {
 		}
 	}
 	componentDidMount(){
-
-		
 	}
 	
 	_onPressButton = () => {
@@ -26,13 +24,13 @@ class Dropdown extends Component {
 		})
 		//console.log(this.state.showDropdown)
 	};
-	_onSelect = (type, id) => {
-		console.log(type)
+	_onSelect = (cate, id, slug) => {
+		console.log(cate)
 		this.setState({
-			currentCategory: type,
+			currentCategory: cate,
 			showDropdown: false
 		})
-		this.props.changeCategory(type, id)
+		this.props.changeCategory(cate, id, slug)
 	}
 	_onHideDropdown = ()=>{
 		this.setState({
@@ -43,6 +41,7 @@ class Dropdown extends Component {
 	render(){
 		const { showDropdown, currentCategory } = this.state
 		const categories = this.props.categories;
+
 		return (
 			<>
 				<View style={(showDropdown ? styles.showDropdown : styles.hideDropdown )}> 
@@ -58,10 +57,21 @@ class Dropdown extends Component {
 					   			<Text>所有分类</Text>
 				   			</TouchableOpacity>
 					   		{categories.map((v,k)=>{
-					   			return <TouchableOpacity key= {k} onPress={this._onSelect.bind(this, v.cateTittle, v.id)} style={{flexDirection:"row",justifyContent: 'space-between'}}>
-						   			<Text>{v.cateTittle}</Text><Text>帖子：{v.topic_count}</Text>
-					   			</TouchableOpacity>
-
+					   			return <>
+					   				<TouchableOpacity key= {k} onPress={this._onSelect.bind(this, v.cateTittle, v.id, v.slug)} style={{flexDirection:"row",justifyContent: 'space-between'}}>
+							   			<Text>{v.cateTittle}</Text><Text>帖子：{v.topic_count}</Text>
+							   		</TouchableOpacity>
+							   		{v.subCates != null && v.subCates.length != 0 &&
+								   		v.subCates.map((v1,k1)=>{
+								   				return <TouchableOpacity key= {k} onPress={this._onSelect.bind(this, v1.name, v1.id, v1.slug)} style={{flexDirection:"row",justifyContent: 'space-between'}}>
+										   			<Text style={{flex:1}}> -- {v1.name}</Text><Text>帖子：{v1.topic_count}</Text>
+									   			</TouchableOpacity>
+								   			})
+										}
+						   			
+						   			
+					   				</>
+					   			
 					   		})}
 					   	</View>
 				   	</TouchableOpacity>

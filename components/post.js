@@ -121,9 +121,9 @@ class Post extends Component {
 			if(this.state.post_type === "new_topic"){
 				this.props.navigation.navigate('TopicDetail',{tid:result.post.topic_id,uid:result.post.user_id})
 			}else if(this.state.post_type === "reply"){
-				this.props.replySuccess();
+				this.props.replySuccess(result.post);
 			}else if(this.state.post_type === "edit"){
-				this.props.editSuccess();
+				this.props.editSuccess(result.post);
 			}
 		} 
     }

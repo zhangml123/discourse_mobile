@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:inputType="text"
-        android:text="dddddd"
+        android:text=""
         android:hint="输入标题"
          />
     <EditText
@@ -21,7 +21,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:inputType="text"
-        android:text="dddddd"
+        android:text=""
         android:hint="输入连接地址"
         />
 </LinearLayout>
